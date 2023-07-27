@@ -1,38 +1,51 @@
-const Fruit = require('./fruits-model');
-const router = require('express').Router();
+const Fruit = require("./fruits-model");
+const router = require("express").Router();
 
-router.get('/', (req, res) => {
+router.get("/", (req, res, next) => {
   Fruit.getAll()
-    .then(fruits => {
+    .then((fruits) => {
       res.json(fruits);
     })
-    .catch(err => {
-      res.status(500).json({ message: `Failed to retrieve fruits: ${err.message}` });
+    .catch((err) => {
+      next({
+        status: 500,
+        message: `Failed to retrieve fruits: ${err.message}`,
+      });
     });
 });
 
-router.get('/:id', (req, res) => {
+router.get("/:id", (req, res, next) => {
   Fruit.getById(req.params.id)
-    .then(fruit => {
+    .then((fruit) => {
       if (fruit) {
         res.json(fruit);
       } else {
-        res.status(404).json({ message: 'Failed to retrieve fruit' });
+        next({ status: 404, message: "Failed to retrieve fruit" });
       }
     })
-    .catch(err => {
-      res.status(500).json({ message: `Failed to retrieve fruit: ${err.message}` });
+    .catch((err) => {
+      next({
+        status: 500,
+        message: `Failed to retrieve fruit: ${err.message}`,
+      });
     });
 });
 
-router.post('/', (req, res) => {
+router.post("/", (req, res, next) => {
   Fruit.create(req.body)
-    .then(newFruitEntry => {
+    .then((newFruitEntry) => {
       res.status(201).json(newFruitEntry);
     })
-    .catch(err => {
-      res.status(500).json({ message: `Failed to create fruit: ${err.message}` });
+    .catch((err) => {
+      next({ status: 500, message: `Failed to create fruit: ${err.message}` });
     });
+});
+
+router.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    message: err.message,
+    stack: err.stack,
+  });
 });
 
 module.exports = router;
